@@ -29,9 +29,8 @@ def main():
     msg = raw_input('Input message: ')
 
     msg_ = client.print_msg(msg)
-    #print('Sum: %d + %d = %d' % (n1, n2, sum_))
 
-    # Close!
+    # Close
     transport.close()
 
 if __name__ == '__main__':
