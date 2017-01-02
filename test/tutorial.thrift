@@ -1,4 +1,4 @@
-namespace py tutorial
+namespace cpp tutorial
 
 typedef i32 MyInteger
 
