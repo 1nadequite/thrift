@@ -1,8 +1,14 @@
 #include "./gen-cpp/UserManager.h"
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
-#include <thrift/transport/TServerSocket.h>
-#include <thrift/transport/TTransportUtils.h>
+#include <stdint.h>
+#include <concurrency/ThreadManager.h>
+#include <concurrency/PosixThreadFactory.h>
+#include <protocol/TBinaryProtocol.h>
+#include <server/TSimpleServer.h>
+#include <server/TThreadPoolServer.h>
+#include <server/TThreadedServer.h>
+#include <server/TNonblockingServer.h>
+#include <transport/TServerSocket.h>
+#include <transport/TTransportUtils.h>
 
 #include <iostream>
 #include <vector>
@@ -11,6 +17,7 @@ using namespace apache::thrift;
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 using namespace apache::thrift::server;
+using namespace apache::thrift::concurrency;
 
 using boost::shared_ptr;
 
@@ -25,7 +32,7 @@ public:
     cout << "ping()" << endl;
   }
 
-  int32_t add_user(const User& u) {
+  uint32_t add_user(const User& u) {
     /*if (!u.firstname) {
       InvalidValueException err;
       err.error_code = 1;
@@ -43,7 +50,7 @@ public:
     return 1;
   }
 
-  User get_user(const int32_t user_id) {
+  User get_user(const uint32_t user_id) {
     /*if (user_id < 0)
       throw InvalidValueException("Wrong id"); */
     return users[user_id];
@@ -53,9 +60,9 @@ public:
     /*if (users.size() == 0)
       throw InvalidValueException("List is empty");*/
     cout << "All added users" << endl;
-    for (User& u: users) {
+    /*for (auto& u: users) {
       cout << "[ " << u.firstname << ' ' << u.lastname << " ]" << endl;
-    }
+    }*/
     return users;
   }
 
@@ -69,7 +76,7 @@ protected:
 };
 
 int main() {
-  shared_ptr<UserManagerHandler> handler(new UserManagerHandler());
+  /*shared_ptr<UserManagerHandler> handler(new UserManagerHandler());
   shared_ptr<TProcessor> processor(new UserManagerProcessor(handler));
   shared_ptr<TServerTransport> serverTransport(new TServerSocket(9090));
   shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
@@ -78,12 +85,23 @@ int main() {
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
 
   // using thread pool with maximum 15 threads to handle incoming requests
-  /*shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(15);
+  shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(15);
   shared_ptr<PosixThreadFactory> threadFactory = shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
   threadManager->threadFactory(threadFactory);
   threadManager->start();
   TNonblockingServer server(processor, protocolFactory, 8888, threadManager);
   */
+
+  shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+  shared_ptr<UserManagerHandler> handler(new UserManagerHandler());
+  shared_ptr<TProcessor> processor(new UserManagerProcessor(handler));
+
+  shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(15);
+  shared_ptr<PosixThreadFactory> threadFactory = shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
+  threadManager->threadFactory(threadFactory);
+  threadManager->start();
+
+  TNonblockingServer server(processor, protocolFactory, 9090, threadManager);
 
   cout << "Starting the server..." << endl;
   server.serve();
