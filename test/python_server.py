@@ -33,23 +33,7 @@ class UserManagerHandler:
         users.remove(user)
         print 'User ' + user + ' leaves from the chat.'
 
-    def add_user(self, user):
-        if user.firstname == None:
-            raise InvalidValueException(1, 'No firstname exception')
-        if user.lastname == None:
-            raise InvalidValueException(2, 'No lastname exception')
-        if user.user_id <= 0:
-            raise InvalidValueException(3, 'Wrong user_id')
-        if user.sex != SexType.MALE and user.sex != SexType.FEMALE:
-            raise InvalidValueException(4, 'Wrong sex id')
-        print 'Processing user ' + user.firstname + ' ' + user.lastname
-        users.append(user)
-        print users
-        return True
-
     def get_all_users(self):
-        if len(users) == 0:
-            raise InvalidValueException(6, 'No one is online.')
         return users
 
     def last_messages(self):
@@ -70,8 +54,6 @@ tfactory = TTransport.TBufferedTransportFactory()
 pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
 #server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
-
-# You could do one of these for a multithreaded server
 server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
 #server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
 

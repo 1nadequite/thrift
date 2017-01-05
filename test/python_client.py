@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import time, readline, thread
 import datetime
 sys.path.append('./gen-py')
 
@@ -15,23 +16,22 @@ def date_to_str(now):
     cur_time = str(now.hour) + ':' + str(now.minute) + ':' + str(now.second)
     return cur_time
 
+def synch_thread():
+    while True:
+        time.sleep(1)
+        sys.stdout.write('\r'+' '*(len(readline.get_line_buffer())+2)+'\r')
+        print 'Some text'
+        sys.stdout.write(readline.get_line_buffer())
+        sys.stdout.flush()
+
 def main():
-    # Make socket
     transport = TSocket.TSocket('localhost', 9080)
-
-    # Buffering is critical. Raw sockets are very slow
     transport = TTransport.TBufferedTransport(transport)
-
-    # Wrap in a protocol
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
-
-    # Create a client to use the protocol encoder
     client = UserManager.Client(protocol)
 
-    # Connect!
     transport.open()
 
-    # client.ping()
     global_user_id = 1
     while (True):
         nick = raw_input("Input your nickname: ")
@@ -40,26 +40,11 @@ def main():
             print "Print '/command' for more information"
             break
 
+    thread.start_new_thread(synch_thread, ())
     while (True):
         com = raw_input()
-        '''if com == 'Add':
-            u = User()
-            u.user_id = global_user_id
-            u.nickname = nick
-            u.firstname = raw_input('Input firstname: ')
-            u.lastname = raw_input('Input lastname: ')
-            sex_type = int(raw_input('Input sex type (1 - Male, 2 - Female): '))
-            if sex_type == 1: u.sex = SexType.MALE
-            else: u.sex = SexType.FEMALE
-            desc = raw_input('Input description (optional): ')
-            if len(desc) > 0: u.description = desc
-            if client.add_user(u):
-                global_user_id += 1
-                print 'user added seccesfully'
-        '''
-        if com == '/command':
-
-        elif com == '/users':
+        #if com == '/command':
+        if com == '/users':
             print 'Users online: '
             for user in client.get_all_users():
                 print user
@@ -78,7 +63,6 @@ def main():
             msg.text = com
             client.print_message(msg)
 
-    # Close
     transport.close()
 
 if __name__ == '__main__':
